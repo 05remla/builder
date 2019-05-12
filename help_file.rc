@@ -1,0 +1,70 @@
+	setup:
+	   Create required directories and test for required tools
+
+	extract:
+	   Extract contents of iso found in $ORIGINAL_IMAGE_DIR
+	   to appropriate location
+
+	chroot:
+	   Sets necisary variables and configs then chroot in to
+	   extracted image
+
+	clean_chroot:
+	   Kill processes and unmount devices when chroot work is
+       complete
+
+	customize:
+	   Customize various aspects of the image with these commands
+	   in an attemp to automate the building process
+
+	   -scripts_in: Runs all scripts in $SCRIPTS_IN_DIR in numerical 
+		        order inside the chroot
+                
+            -list: used to view the available scripts
+
+	   -include: Copies the contents of $ to the $ directory
+
+	   -binaries: Installs all binary packages found in $
+
+	   -scripts_ex: Runs all scripts in $SCRIPTS_EX_DIR in numerical 
+        order external to the chroot
+
+	   -gconf: Apply changes to $ using an exported gconf file and 
+        tool
+
+
+	backup_build:
+	  Add the current build to an archive as a backup
+
+	restore_build:
+	  Restore older build from archive
+
+	cache_packages:
+	   Copy and cache packages for easy install later
+	   
+	restore_cached_packages:
+	   Copy packages back to squashfs for easy install
+	    
+	test_package_list:
+	   Tests packages in package_install_list.txt for
+	   availability
+
+	clean:
+	   Clean image after customizations/alterations
+
+	squashfs:
+	   Compress the file system and move it to the extracted iso
+	   contents directory
+
+	mkiso:
+	   Create iso image of the $EXT_ISO_CONTENTS dir
+
+	open_initrd:
+	   Decompress and extract the initial ram disk package
+
+	package_initrd:
+	   Compress the extracted contents of the initial ram disk
+
+	delete:
+	   Delete contents of $EXT_ISO_CONTENTS & $EXT_SQUASH_FS
+
