@@ -568,7 +568,7 @@ do
                 sudo rm ${EXT_ISO_CONTENTS}/live/filesystem.squashfs
             fi
 
-            sudo mksquashfs ${EXT_SQUASH_FS} ${EXT_ISO_CONTENTS}/live/filesystem.squashfs
+            sudo mksquashfs -comp xz ${EXT_SQUASH_FS} ${EXT_ISO_CONTENTS}/live/filesystem.squashfs
             # RECREATE ALL FILESYSTEM MANIFESTS AND INFORMATIONAL FILES
             # sudo printf $(sudo du -sx --block-size=1 edit | cut -f1) > ${EXT_ISO_CONTENTS}/casper/filesystem.size
         ;;
