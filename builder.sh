@@ -1,4 +1,5 @@
 export     SYS_BUILD_HOME="/root/IMAGE_BUILD_DIRECTORY"
+export      BUILD_SCRIPTS="${SYS_BUILD_HOME}/BUILDER_SCRIPTS"
 export   EXT_ISO_CONTENTS="${SYS_BUILD_HOME}/ext_contents"
 export      EXT_SQUASH_FS="${SYS_BUILD_HOME}/ext_squashfs"
 export          GCONF_DIR="${SYS_BUILD_HOME}/gconf"
@@ -32,7 +33,7 @@ function help()
 	echo "          builder.sh --script=\"../kernel/4.2.4/insert_into_and_install_kernel.sh\" --shell=bash"
 	echo "          builder.sh extract"
 	echo
-	bash .constructor.sh --help
+	bash "${BUILD_SCRIPTS}/constructor.sh" --help
 }
 
 if [[ -z "$@" ]]; then
@@ -51,13 +52,13 @@ do
     ;;
     --help|-h)
       help
-	    exit
+      exit
     ;;
   esac
 done
 
 if [[ -z ${script} ]]; then
-	script=".constructor.sh"
+	script="${BUILD_SCRIPTS}/constructor.sh"
 fi
 
 if [[ -z ${shell} ]]; then
