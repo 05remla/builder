@@ -58,7 +58,7 @@ do
 done
 
 if [[ -z ${script} ]]; then
-	script="${BUILD_SCRIPTS}/constructor.sh"
+  script="${BUILD_SCRIPTS}/constructor.sh"
 fi
 
 if [[ -z ${shell} ]]; then
