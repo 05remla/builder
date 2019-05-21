@@ -46,6 +46,17 @@ fi
 
 
 ##---------------------FUNCTIONS-------------------------------##
+function LOGGER()
+{
+  # Ex. cat file.txt 2>&1 | LOGGER test.log
+  logfile=$1
+  date_data=($(echo $(date)))
+  dtg="${date_data[2]}${date_data[1]}${date_data[5]}@${date_data[3]}"
+  printf "[$dtg] " >> $logfile
+  tee -a $logfile
+}
+
+
 function SET_CHROOT()
 {
   if [[ ! -f "/tmp/proj_chroot_config" ]]; then
@@ -80,8 +91,14 @@ function CLEAN_CHROOT()
 }
 
 
+function CLEAN_BUILD()
+{
+  # remove all build related files
+  # rm -rf 
+}
 
-function CLEAN()
+
+function CLEAN_SQUASHFS()
 {
   if [[ $(ls "${EXT_SQUASH_FS}/var/cache/apt/archives" | wc -l) > 2 ]]; then
     printf "${CLI_GREEN}would you like to cache packages first${CLI_RESET}?: "
@@ -92,7 +109,7 @@ function CLEAN()
   fi
 
   DTG=$(date | awk '{print $3$2$6"-"$4}' | tr ":" ".")
-  sudo mkdir "${LOG_DIR}/${DTG}"
+  sudo mkdir -p "${LOG_DIR}/${DTG}"
   sudo cp -r "${EXT_SQUASH_FS}/var/log" "${LOG_DIR}/${DTG}" 2>/dev/null
   sudo chroot ${EXT_SQUASH_FS} apt-get -y clean
   sudo chroot ${EXT_SQUASH_FS} apt-get -y autoremove
@@ -192,7 +209,8 @@ export -f CACHE_PACKAGES
 export -f RESTORE_CACHED_PACKAGES
 export -f SET_CHROOT
 export -f CLEAN_CHROOT
-export -f CLEAN
+export -f CLEAN_SQUASHFS
+export -f LOGGER
 export -f SETUP
 export -f GET_KERNEL
 
@@ -219,8 +237,8 @@ if [[ "$1" == "chroot" ]]; then
   sudo chroot ${EXT_SQUASH_FS}
   exit
 
-elif [[ "$1" == "clean" ]]; then
-  CLEAN
+elif [[ "$1" == "clean_squashfs" ]]; then
+  CLEAN_SQUASHFS
   exit
 
 elif [[ "$1" == "setup" ]]; then
@@ -271,7 +289,7 @@ do
 
       echo ${package}
       printf "${CLI_RED}You are about to delete your current build scripts and reources."
-      printf "Are you sure you want to proceed? [yes|no]: ${CLI_RESET}"
+      printf "Are you sure you want to proceed?${CLI_RESET} [yes|no]: "
       read choice
       if [[ $choice == "yes" ]]; then
         rm -rf ${GCONF_DIR} ${CACHE_DIR} ${BINARY_PACKAGES} ${INCLUDE_DIR} ${SCRIPTS_IN_DIR} ${SCRIPTS_EX_DIR} ${SOURCES_DIR}
@@ -366,22 +384,6 @@ do
         printf "${CLI_GREEN}removing old build base${CLI_RESET}...\n"
         sudo rm -rf ${EXT_ISO_CONTENTS} ${EXT_SQUASH_FS}
       fi
-    ;;
-
-
-
-    #--------------------------------# TEST PACKAGE LIST #----------------------------------------
-    test_package_list)
-      File="${SYS_BUILD_HOME}/package_install_list.txt"
-      while read line
-      do
-        number=$(cat $File | grep -o "${line} " | wc -l)
-        if [[ ${number} > 1 ]]; then
-          echo "${number} occurance of ${line}"
-        fi
-        echo "testing ${line} availability..."
-        sudo apt-get -s -qq install $line > /dev/null
-      done <$File
     ;;
 
 
@@ -573,6 +575,7 @@ do
 
     #------------------------------------# OPEN INITRD #--------------------------------------------
     open_initrd)
+        # add initramfs tools command 'unmakeinitrd' here
         printf "${CLI_RED}Path and name of file: ${CLI_RESET}"
         read input
 
@@ -587,14 +590,6 @@ do
           echo "${path}/tempdir" >> ${CLEAN_FILE}
           cd "${path}/tempdir"
 
-          #if [[ ${extn} == "gz" ]]; then
-            gzip -d ../${file}
-            #cpio -ivdum < ../initrd
-          #else
-          #  cpio -ivdum < ../${file}
-          #fi
-
-          #mv ../${file} ../"${file}.orig"
         fi
     ;;
 
@@ -609,7 +604,6 @@ do
           echo "working..."
           cd ${input}
           echo "Compressing initrd package..."
-          #mkinitramfs  -v -o  /tmp/initrd-$(uname -r)
           find . | cpio -o --format='newc' > ../initrd.img
           gzip -v9 ../initrd.img
           echo
@@ -620,11 +614,6 @@ do
 
     #------------------------------------# SQUASHFS #--------------------------------------------
     squashfs)
-        CLEAN
-        CLEAN_CHROOT
-        sleep 2
-        CLEAN_CHROOT
-
         printf "${CLI_RED}use extra compression?: ${CLI_RESET}"
         read option
 
