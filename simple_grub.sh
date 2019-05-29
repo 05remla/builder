@@ -45,12 +45,9 @@
 #
 # ----[GRUB.CFG EXAMPLE]----
 # search --set=root --file /DEBIAN_CUSTOM
-#
 # insmod all_video
-#
 # set default="0"
 # set timeout=30
-#
 # menuentry "Debian Live" {
 #     linux /vmlinuz boot=live quiet nomodeset
 #     initrd /initrd
@@ -59,7 +56,7 @@
 echo "1) grub bios"
 echo "2) grub UEFI"
 printf "[1,2]: "
-read option
+read mode
 
 rm -rf "${EXT_ISO_CONTENTS}/scratch"
 for i in $(ls "${EXT_ISO_CONTENTS}/image")
@@ -76,34 +73,41 @@ mkdir -p "${EXT_ISO_CONTENTS}/scratch"
 cd "${EXT_ISO_CONTENTS}/scratch"
 cp "${SYS_BUILD_HOME}/boot/grub.cfg" "${EXT_ISO_CONTENTS}/scratch"
 
-if [[ $option == 1 ]]; then
-  if [[ -e "${EXT_ISO_CONTENTS}/live/filesystem.squashfs" ]]; then
-    echo "moving squashfs in to image..."
-    mv "${EXT_ISO_CONTENTS}/live/filesystem.squashfs" "${EXT_ISO_CONTENTS}/image/live"
-  elif [[ ! -e "${EXT_ISO_CONTENTS}/image/live/filesystem.squashfs" ]]; then
-    echo "Cannot find squash filesystem!"
-    echo "exiting..."
-  fi
+if [[ -e "${EXT_ISO_CONTENTS}/live/filesystem.squashfs" ]]; then
+  echo "moving squashfs in to image..."
+  mv "${EXT_ISO_CONTENTS}/live/filesystem.squashfs" "${EXT_ISO_CONTENTS}/image/live"
+  rm -rf "${EXT_ISO_CONTENTS}/live/"
+elif [[ ! -e "${EXT_ISO_CONTENTS}/image/live/filesystem.squashfs" ]]; then
+  echo "Cannot find squash filesystem!"
+  echo "exiting..."
+fi
 
-  echo "use custom kernel or the one in the chroot env?"
-  echo "1. custom"
-  echo "2. chroot env"
-  printf "[1 or 2]#> "
+item1=($(ls "${EXT_SQUASH_FS}/boot/init"*))
+item2=($(ls "${EXT_SQUASH_FS}/boot/vmlinuz"*))
+
+echo "we found kernel ${item1}"
+printf "is this the one you want to use?: "
+read option
+
+if [[ ! ${option} == "yes" ]]; then
+  echo "you may need to import the kernel manually"
+
+  echo "continue?"
+  printf "> "
   read option
 
-  if [[ $option == 1 ]]; then
-    item1=($(ls "${EXT_SQUASH_FS}/boot/init"*))
-    item2=($(ls "${EXT_SQUASH_FS}/boot/vmlinuz"*))
-  elif [[ $option == 2 ]]; then
-    item1=($(ls "${SYS_BUILD_HOME}/kernel/init"*))
-    item2=($(ls "${SYS_BUILD_HOME}/kernel/vmlinuz"*))
+  if [[ ! ${option} == "yes" ]]; then
+    exit
   fi
 
+else
   cp ${item1[0]} "${EXT_ISO_CONTENTS}/image/initrd.img"
   cp ${item2[0]} "${EXT_ISO_CONTENTS}/image/vmlinuz"
+fi
 
-  touch "${EXT_ISO_CONTENTS}/image/DEBIAN_CUSTOM"
+touch "${EXT_ISO_CONTENTS}/image/DEBIAN_CUSTOM"
 
+if [[ $mode == 1 ]]; then
   grub-mkstandalone --format=i386-pc --output=${EXT_ISO_CONTENTS}/scratch/core.img \
            --install-modules="linux normal iso9660 biosdisk memdisk search tar ls" \
            --modules="linux normal iso9660 biosdisk search" --locales="" --fonts="" \
@@ -124,19 +128,7 @@ if [[ $option == 1 ]]; then
           "${SYS_BUILD_HOME}/debian-custom.iso" -graft-points "${EXT_ISO_CONTENTS}/image" \
           /boot/grub/bios.img=${EXT_ISO_CONTENTS}/scratch/bios.img
 
-elif [[ $option == 2 ]]; then
-  if [[ -e "${EXT_ISO_CONTENTS}/live/filesystem.squashfs" ]]; then
-    echo "moving squashfs in to image..."
-    mv "${EXT_ISO_CONTENTS}/live/filesystem.squashfs" "${EXT_ISO_CONTENTS}/image/live"
-  fi
-
-  item1=($(ls "${EXT_SQUASH_FS}/boot/init"*))
-  item2=($(ls "${EXT_SQUASH_FS}/boot/vmlinuz"*))
-  cp ${item1[0]} "${EXT_ISO_CONTENTS}/image/initrd.img"
-  cp ${item2[0]} "${EXT_ISO_CONTENTS}/image/vmlinuz"
-
-  touch "${EXT_ISO_CONTENTS}/image/DEBIAN_CUSTOM"
-
+elif [[ $mode == 2 ]]; then
   grub-mkstandalone --format=x86_64-efi --output="${EXT_ISO_CONTENTS}/scratch/bootx64.efi" \
       --locales="" --fonts="" "boot/grub/grub.cfg=${EXT_ISO_CONTENTS}/scratch/grub.cfg"
 
