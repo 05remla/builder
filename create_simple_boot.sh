@@ -50,8 +50,27 @@ cp "${SYS_BUILD_HOME}/boot/grub.cfg" "${EXT_ISO_CONTENTS}/scratch"
 
 item1=($(ls "${EXT_SQUASH_FS}/boot/init"*))
 item2=($(ls "${EXT_SQUASH_FS}/boot/vmlinuz"*))
-cp ${item1[0]} "${EXT_ISO_CONTENTS}/image/initrd.img"
-cp ${item2[0]} "${EXT_ISO_CONTENTS}/image/vmlinuz"
+
+echo "we found kernel ${item1}"
+printf "is this the one you want to use?: "
+read option
+
+if [[ ! ${option} == "yes" ]]; then
+  echo "you may need to import the kernel manually"
+
+  echo "continue?"
+  printf "> "
+  read option
+  
+  if [[ ! ${option} == "yes" ]]; then
+    exit
+  fi
+  
+else
+  cp ${item1[0]} "${EXT_ISO_CONTENTS}/image/initrd.img"
+  cp ${item2[0]} "${EXT_ISO_CONTENTS}/image/vmlinuz"
+fi
+
 
 touch "${EXT_ISO_CONTENTS}/image/DEBIAN_CUSTOM"
 
