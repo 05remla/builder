@@ -27,7 +27,10 @@ elif [[ $option == 2 ]]; then
   ln -s linux* linux
   cd linux
   make clean && make mrproper
-  cp /boot/*.cfg ./.config
+  echo "path to config file?"
+  printf "> "
+  read configfile
+  cp $configfile ./.config
 
 elif [[ $option == 3 ]]; then
   make -j7 bindeb-pkg
