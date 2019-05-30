@@ -80,6 +80,7 @@ if [[ -e "${EXT_ISO_CONTENTS}/live/filesystem.squashfs" ]]; then
 elif [[ ! -e "${EXT_ISO_CONTENTS}/image/live/filesystem.squashfs" ]]; then
   echo "Cannot find squash filesystem!"
   echo "exiting..."
+  exit
 fi
 
 item1=($(ls "${EXT_SQUASH_FS}/boot/init"*))
@@ -100,6 +101,10 @@ if [[ ! ${option} == "yes" ]]; then
     exit
   fi
 
+  if [[ ! -e "${EXT_ISO_CONTENTS}/image/initrd.img" ]]; then
+    echo "there is not kernel in image path. exiting..."
+    exit
+  fi
 else
   cp ${item1[0]} "${EXT_ISO_CONTENTS}/image/initrd.img"
   cp ${item2[0]} "${EXT_ISO_CONTENTS}/image/vmlinuz"
@@ -141,7 +146,7 @@ elif [[ $mode == 2 ]]; then
 
   if [[ -e "${SYS_BUILD_HOME}/debian-custom(UEFI).iso" ]]; then
     echo "deleteing existing iso"
-    rm -rf "${SYS_BUILD_HOME}/debian-custom.iso"
+    rm -rf "${SYS_BUILD_HOME}/debian-custom(UEFI).iso"
   fi
 
   xorriso -as mkisofs -iso-level 3 -full-iso9660-filenames -volid "DEBIAN_CUSTOM" \
