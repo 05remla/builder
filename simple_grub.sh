@@ -1,5 +1,5 @@
 # script to be called from builder.sh to initialize variables
-# builder.sh --script=create_simple_boot.sh
+# builder.sh --script=simple_grub.sh
 #
 # resulting file structure
 # EXT_ISO_CONTENTS
